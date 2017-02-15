@@ -1,4 +1,4 @@
-# Copyright 2016 John J. Rofrano. All Rights Reserved.
+# Copyright 2016, 2017 John J. Rofrano. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,8 @@
 # limitations under the License.
 
 import os
+from threading import Lock
 from flask import Flask, Response, jsonify, request, json
-
-# Pet Model for demo
-pet_count = 2
-pets = {'fido': {'name': 'fido', 'kind': 'dog'}, 'kitty': {'name': 'kitty', 'kind': 'cat'}}
 
 # Create Flask application
 app = Flask(__name__)
@@ -29,6 +26,9 @@ HTTP_204_NO_CONTENT = 204
 HTTP_400_BAD_REQUEST = 400
 HTTP_404_NOT_FOUND = 404
 HTTP_409_CONFLICT = 409
+
+# Lock for thread-safe counter increment
+lock = Lock()
 
 ######################################################################
 # GET INDEX
@@ -59,13 +59,13 @@ def list_pets():
 ######################################################################
 # RETRIEVE A PET
 ######################################################################
-@app.route('/pets/<id>', methods=['GET'])
-def get_pet(id):
+@app.route('/pets/<int:id>', methods=['GET'])
+def get_pets(id):
     if pets.has_key(id):
         message = pets[id]
         rc = HTTP_200_OK
     else:
-        message = { 'error' : 'Pet %s was not found' % id }
+        message = { 'error' : 'Pet with id: %s was not found' % str(id) }
         rc = HTTP_404_NOT_FOUND
 
     return reply(message, rc)
@@ -74,17 +74,13 @@ def get_pet(id):
 # ADD A NEW PET
 ######################################################################
 @app.route('/pets', methods=['POST'])
-def create_pet():
+def create_pets():
     payload = request.get_json()
     if is_valid(payload):
-        id = payload['name']
-        if pets.has_key(id):
-            message = { 'error' : 'Pet %s already exists' % id }
-            rc = HTTP_409_CONFLICT
-        else:
-            pets[id] = {'name': payload['name'], 'kind': payload['kind']}
-            message = pets[id]
-            rc = HTTP_201_CREATED
+        id = next_index()
+        pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
+        message = pets[id]
+        rc = HTTP_201_CREATED
     else:
         message = { 'error' : 'Data is not valid' }
         rc = HTTP_400_BAD_REQUEST
@@ -94,11 +90,11 @@ def create_pet():
 ######################################################################
 # UPDATE AN EXISTING PET
 ######################################################################
-@app.route('/pets/<id>', methods=['PUT'])
-def update_pet(id):
+@app.route('/pets/<int:id>', methods=['PUT'])
+def update_pets(id):
     payload = request.get_json()
-    if pets.has_key(id):
-        pets[id] = {'name': payload['name'], 'kind': payload['kind']}
+    if pets.has_key(id) and is_valid(payload):
+        pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
         message = pets[id]
         rc = HTTP_200_OK
     else:
@@ -110,8 +106,8 @@ def update_pet(id):
 ######################################################################
 # DELETE A PET
 ######################################################################
-@app.route('/pets/<id>', methods=['DELETE'])
-def delete_pet(id):
+@app.route('/pets/<int:id>', methods=['DELETE'])
+def delete_pets(id):
     del pets[id];
     return '', HTTP_204_NO_CONTENT
 
@@ -119,9 +115,10 @@ def delete_pet(id):
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 def next_index():
-    redis.incr('index')
-    index = redis.get('index')
-    return index
+    global current_pet_id
+    with lock:
+        current_pet_id += 1
+    return current_pet_id
 
 def reply(message, rc):
     response = Response(json.dumps(message))
@@ -139,10 +136,13 @@ def is_valid(data):
         app.logger.error('Missing value error: %s', err)
     return valid
 
+
 ######################################################################
 #   M A I N
 ######################################################################
 if __name__ == "__main__":
+    current_pet_id = 2
+    pets = { 1: {'id': 1, 'name': 'fido', 'kind': 'dog'}, 2: {'id': 2, 'name': 'kitty', 'kind': 'cat'} }
     # Pull options from environment
     debug = (os.getenv('DEBUG', 'False') == 'True')
     port = os.getenv('PORT', '5000')
