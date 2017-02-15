@@ -92,11 +92,15 @@ def create_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['PUT'])
 def update_pets(id):
-    payload = request.get_json()
-    if pets.has_key(id) and is_valid(payload):
-        pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
-        message = pets[id]
-        rc = HTTP_200_OK
+    if pets.has_key(id):
+        payload = request.get_json()
+        if is_valid(payload):
+            pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
+            message = pets[id]
+            rc = HTTP_200_OK
+        else:
+            message = { 'error' : 'Pet data was not valid' }
+            rc = HTTP_400_BAD_REQUEST
     else:
         message = { 'error' : 'Pet %s was not found' % id }
         rc = HTTP_404_NOT_FOUND
@@ -133,7 +137,7 @@ def is_valid(data):
         kind = data['kind']
         valid = True
     except KeyError as err:
-        app.logger.error('Missing value error: %s', err)
+        app.logger.error('Missing parameter error: %s', err)
     return valid
 
 

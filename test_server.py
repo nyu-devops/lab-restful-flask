@@ -68,6 +68,12 @@ class TestPetServer(unittest.TestCase):
         new_json = json.loads(resp.data)
         self.assertTrue (new_json['kind'] == 'tabby')
 
+    def test_update_pet_with_no_name(self):
+        new_pet = {'kind': 'dog'}
+        data = json.dumps(new_pet)
+        resp = self.app.put('/pets/2', data=data, content_type='application/json')
+        self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
+
     def test_delete_pet(self):
         # save the current number of pets for later comparrison
         pet_count = self.get_pet_count()
