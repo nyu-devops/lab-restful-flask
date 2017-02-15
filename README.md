@@ -1,7 +1,7 @@
-# nyu-lab-restful-flask
-[![Build Status](https://travis-ci.org/rofrano/nyu-lab-restful-flask.svg?branch=master)](https://travis-ci.org/rofrano/nyu-lab-restful-flask)
-  
-This repo demonstrates how to create a simple RESTful service using Python Flask
+# lab-restful-flask
+
+This repo demonstrates how to create a simple RESTful service using Python Flask.
+The resource model has no persistence to keep the application simple. It's purpose is to show the correct API and return codes that should be used for a REST API.
 
 ## Prerequisite Installation using Vagrant
 
@@ -13,8 +13,8 @@ Download [Vagrant](https://www.vagrantup.com/)
 
 Clone the project to your development folder and create your Vagrant vm
 
-    $ git clone git@github.ibm.com:rofrano/nyu-lab-restful-flask.git
-    $ cd nyu-lab-restful-flask
+    $ git clone https://github.com/nyu-devops/lab-restful-flask.git
+    $ cd lab-restful-flask
     $ vagrant up
 
 Once the VM is up you can use it with:
