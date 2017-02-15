@@ -21,8 +21,9 @@ Once the VM is up you can use it with:
 
     $ vagrant ssh
     $ cd /vagrant
+    $ python server.py
 
-When you are done, you can exit and shut it down with:
+When you are done, you can use `Ctrl+C` to stop the server and then exit and shut down the vm with:
 
     $ exit
     $ vagrant halt
