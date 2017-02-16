@@ -90,6 +90,12 @@ class TestPetServer(unittest.TestCase):
         resp = self.app.post('/pets', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
 
+    def test_create_pet_with_no_content_type(self):
+        new_pet = {'kind': 'dog'}
+        data = json.dumps(new_pet)
+        resp = self.app.post('/pets', data=data)
+        self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
+
     def test_get_nonexisting_pet(self):
         resp = self.app.get('/pets/5')
         self.assertTrue( resp.status_code == HTTP_404_NOT_FOUND )

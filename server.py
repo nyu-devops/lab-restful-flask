@@ -138,6 +138,9 @@ def is_valid(data):
         valid = True
     except KeyError as err:
         app.logger.error('Missing parameter error: %s', err)
+    except TypeError:
+        app.logger.error('Invalid Content Type error')
+
     return valid
 
 
