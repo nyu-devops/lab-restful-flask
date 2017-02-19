@@ -19,6 +19,7 @@ from flask import Flask, Response, jsonify, request, make_response, json
 
 # Create Flask application
 app = Flask(__name__)
+app.config['LOGGING_LEVEL'] = logging.INFO
 
 # Status Codes
 HTTP_200_OK = 200
@@ -152,18 +153,22 @@ def is_valid(data):
         valid = True
     except KeyError as err:
         app.logger.warn('Missing parameter error: %s', err)
-    except TypeError:
-        app.logger.warn('Invalid Content Type error')
+    except TypeError as err:
+        app.logger.warn('Invalid Content Type error: %s', err)
 
     return valid
 
-# @app.before_first_request
-# def setup_logging():
-#     if not app.debug:
-#         # In production mode, add log handler to sys.stderr.
-#         app.logger.addHandler(logging.StreamHandler())
-#         app.logger.setLevel(logging.INFO)
-
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        # In production mode, add log handler to sys.stderr.
+        handler = logging.StreamHandler()
+        handler.setLevel(app.config['LOGGING_LEVEL'])
+        # formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
+        #'%Y-%m-%d %H:%M:%S'
+        formatter = logging.Formatter('[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+        handler.setFormatter(formatter)
+        app.logger.addHandler(handler)
 
 ######################################################################
 #   M A I N
