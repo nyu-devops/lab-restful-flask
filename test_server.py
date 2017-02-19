@@ -26,7 +26,7 @@ class TestPetServer(unittest.TestCase):
         server.app.logger.setLevel(logging.CRITICAL)
 
         self.app = server.app.test_client()
-        server.pets = { 1: {'id': 1, 'name': 'fido', 'kind': 'dog'}, 2: {'id': 2, 'name': 'kitty', 'kind': 'cat'} }
+        server.pets = [ {'id': 1, 'name': 'fido', 'kind': 'dog'}, {'id': 2, 'name': 'kitty', 'kind': 'cat'} ]
         server.current_pet_id = 2
 
     def test_index(self):

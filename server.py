@@ -31,6 +31,10 @@ HTTP_409_CONFLICT = 409
 # Lock for thread-safe counter increment
 lock = Lock()
 
+# dummy data for testing
+current_pet_id = 2
+pets = [ {'id': 1, 'name': 'fido', 'kind': 'dog'}, {'id': 2, 'name': 'kitty', 'kind': 'cat'} ]
+
 ######################################################################
 # GET INDEX
 ######################################################################
@@ -47,13 +51,12 @@ def index():
 ######################################################################
 @app.route('/pets', methods=['GET'])
 def list_pets():
-    results = pets.values()
+    results = []
     kind = request.args.get('kind')
     if kind:
-        results = []
-        for key, value in pets.iteritems():
-            if value['kind'] == kind:
-                results.append(pets[key])
+        results = [pet for pet in pets if pet['kind'] == kind]
+    else:
+        results = pets
 
     return reply(results, HTTP_200_OK)
 
@@ -62,8 +65,9 @@ def list_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['GET'])
 def get_pets(id):
-    if pets.has_key(id):
-        message = pets[id]
+    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
+    if len(index) > 0:
+        message = pets[index[0]]
         rc = HTTP_200_OK
     else:
         message = { 'error' : 'Pet with id: %s was not found' % str(id) }
@@ -79,8 +83,9 @@ def create_pets():
     payload = request.get_json()
     if is_valid(payload):
         id = next_index()
-        pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
-        message = pets[id]
+        pet = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
+        pets.append(pet)
+        message = pet
         rc = HTTP_201_CREATED
     else:
         message = { 'error' : 'Data is not valid' }
@@ -93,11 +98,12 @@ def create_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['PUT'])
 def update_pets(id):
-    if pets.has_key(id):
+    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
+    if len(index) > 0:
         payload = request.get_json()
         if is_valid(payload):
-            pets[id] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
-            message = pets[id]
+            pets[index[0]] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
+            message = pets[index[0]]
             rc = HTTP_200_OK
         else:
             message = { 'error' : 'Pet data was not valid' }
@@ -113,7 +119,9 @@ def update_pets(id):
 ######################################################################
 @app.route('/pets/<int:id>', methods=['DELETE'])
 def delete_pets(id):
-    del pets[id];
+    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
+    if len(index) > 0:
+        del pets[index[0]]
     return '', HTTP_204_NO_CONTENT
 
 ######################################################################
@@ -138,9 +146,9 @@ def is_valid(data):
         kind = data['kind']
         valid = True
     except KeyError as err:
-        app.logger.error('Missing parameter error: %s', err)
+        app.logger.warn('Missing parameter error: %s', err)
     except TypeError:
-        app.logger.error('Invalid Content Type error')
+        app.logger.warn('Invalid Content Type error')
 
     return valid
 
@@ -156,8 +164,6 @@ def setup_logging():
 #   M A I N
 ######################################################################
 if __name__ == "__main__":
-    current_pet_id = 2
-    pets = { 1: {'id': 1, 'name': 'fido', 'kind': 'dog'}, 2: {'id': 2, 'name': 'kitty', 'kind': 'cat'} }
     # Pull options from environment
     debug = (os.getenv('DEBUG', 'False') == 'True')
     port = os.getenv('PORT', '5000')
