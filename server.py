@@ -33,7 +33,18 @@ lock = Lock()
 
 # dummy data for testing
 current_pet_id = 2
-pets = [ {'id': 1, 'name': 'fido', 'kind': 'dog'}, {'id': 2, 'name': 'kitty', 'kind': 'cat'} ]
+pets = [
+    {
+        'id': 1,
+        'name': 'fido',
+        'kind': 'dog'
+    },
+    {
+        'id': 2,
+        'name': 'kitty',
+        'kind': 'cat'
+    }
+]
 
 ######################################################################
 # GET INDEX
