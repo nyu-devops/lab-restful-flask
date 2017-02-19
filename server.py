@@ -15,7 +15,7 @@
 import os
 import logging
 from threading import Lock
-from flask import Flask, Response, jsonify, request, json
+from flask import Flask, Response, jsonify, request, make_response, json
 
 # Create Flask application
 app = Flask(__name__)
@@ -52,10 +52,10 @@ pets = [
 @app.route('/')
 def index():
     pets_url = request.base_url + "pets"
-    return jsonify(name='Pet Demo REST API Service',
+    return make_response(jsonify(name='Pet Demo REST API Service',
                    version='1.0',
                    url=pets_url
-                   ), HTTP_200_OK
+                   ), HTTP_200_OK)
 
 ######################################################################
 # LIST ALL PETS
@@ -69,7 +69,7 @@ def list_pets():
     else:
         results = pets
 
-    return reply(results, HTTP_200_OK)
+    return make_response(jsonify(results), HTTP_200_OK)
 
 ######################################################################
 # RETRIEVE A PET
@@ -84,7 +84,7 @@ def get_pets(id):
         message = { 'error' : 'Pet with id: %s was not found' % str(id) }
         rc = HTTP_404_NOT_FOUND
 
-    return reply(message, rc)
+    return make_response(jsonify(message), rc)
 
 ######################################################################
 # ADD A NEW PET
@@ -102,7 +102,7 @@ def create_pets():
         message = { 'error' : 'Data is not valid' }
         rc = HTTP_400_BAD_REQUEST
 
-    return reply(message, rc)
+    return make_response(jsonify(message), rc)
 
 ######################################################################
 # UPDATE AN EXISTING PET
@@ -123,7 +123,7 @@ def update_pets(id):
         message = { 'error' : 'Pet %s was not found' % id }
         rc = HTTP_404_NOT_FOUND
 
-    return reply(message, rc)
+    return make_response(jsonify(message), rc)
 
 ######################################################################
 # DELETE A PET
@@ -133,7 +133,7 @@ def delete_pets(id):
     index = [i for i, pet in enumerate(pets) if pet['id'] == id]
     if len(index) > 0:
         del pets[index[0]]
-    return '', HTTP_204_NO_CONTENT
+    return make_response('', HTTP_204_NO_CONTENT)
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -143,12 +143,6 @@ def next_index():
     with lock:
         current_pet_id += 1
     return current_pet_id
-
-def reply(message, rc):
-    response = Response(json.dumps(message))
-    response.headers['Content-Type'] = 'application/json'
-    response.status_code = rc
-    return response
 
 def is_valid(data):
     valid = False
@@ -163,12 +157,12 @@ def is_valid(data):
 
     return valid
 
-@app.before_first_request
-def setup_logging():
-    if not app.debug:
-        # In production mode, add log handler to sys.stderr.
-        app.logger.addHandler(logging.StreamHandler())
-        app.logger.setLevel(logging.INFO)
+# @app.before_first_request
+# def setup_logging():
+#     if not app.debug:
+#         # In production mode, add log handler to sys.stderr.
+#         app.logger.addHandler(logging.StreamHandler())
+#         app.logger.setLevel(logging.INFO)
 
 
 ######################################################################
