@@ -1,6 +1,7 @@
 # run with:
 # python -m unittest discover
 # nosetests --nologcapture
+# nosetests -v --rednose
 
 import logging
 import unittest
@@ -55,63 +56,67 @@ class TestPetServer(unittest.TestCase):
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_201_CREATED )
+        # Make sure location header is set
+        location = resp.headers.get('Location', None)
+        self.assertTrue( location != None)
+        # Check the data is correct
         new_json = json.loads(resp.data)
-        self.assertTrue (new_json['name'] == 'sammy')
+        self.assertEqual (new_json['name'], 'sammy')
         # check that count has gone up and includes sammy
         resp = self.app.get('/pets')
         # print 'resp_data(2): ' + resp.data
         data = json.loads(resp.data)
-        self.assertTrue( resp.status_code == HTTP_200_OK )
-        self.assertTrue( len(data) == pet_count + 1 )
-        self.assertTrue( new_json in data )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
+        self.assertEqual( len(data), pet_count + 1 )
+        self.assertIn( new_json, data )
 
     def test_update_pet(self):
         new_kitty = {'name': 'kitty', 'kind': 'tabby'}
         data = json.dumps(new_kitty)
         resp = self.app.put('/pets/2', data=data, content_type='application/json')
-        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         new_json = json.loads(resp.data)
-        self.assertTrue (new_json['kind'] == 'tabby')
+        self.assertEqual (new_json['kind'], 'tabby')
 
     def test_update_pet_with_no_name(self):
         new_pet = {'kind': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.put('/pets/2', data=data, content_type='application/json')
-        self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
+        self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
 
     def test_delete_pet(self):
         # save the current number of pets for later comparrison
         pet_count = self.get_pet_count()
         # delete a pet
         resp = self.app.delete('/pets/2', content_type='application/json')
-        self.assertTrue( resp.status_code == HTTP_204_NO_CONTENT )
-        self.assertTrue( len(resp.data) == 0 )
+        self.assertEqual( resp.status_code, HTTP_204_NO_CONTENT )
+        self.assertEqual( len(resp.data), 0 )
         new_count = self.get_pet_count()
-        self.assertTrue ( new_count == pet_count - 1)
+        self.assertEqual( new_count, pet_count - 1)
 
     def test_create_pet_with_no_name(self):
         new_pet = {'kind': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data, content_type='application/json')
-        self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
+        self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
 
     def test_create_pet_with_no_content_type(self):
         new_pet = {'kind': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data)
-        self.assertTrue( resp.status_code == HTTP_400_BAD_REQUEST )
+        self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
 
     def test_get_nonexisting_pet(self):
         resp = self.app.get('/pets/5')
-        self.assertTrue( resp.status_code == HTTP_404_NOT_FOUND )
+        self.assertEqual( resp.status_code, HTTP_404_NOT_FOUND )
 
     def test_query_pet_list(self):
         resp = self.app.get('/pets', query_string='kind=dog')
-        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         self.assertTrue( len(resp.data) > 0 )
         data = json.loads(resp.data)
         query_item = data[0]
-        self.assertTrue(query_item['kind'] == 'dog')
+        self.assertEqual(query_item['kind'], 'dog')
 
 
 ######################################################################
@@ -121,7 +126,7 @@ class TestPetServer(unittest.TestCase):
     def get_pet_count(self):
         # save the current number of pets
         resp = self.app.get('/pets')
-        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         # print 'resp_data: ' + resp.data
         data = json.loads(resp.data)
         return len(data)

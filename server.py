@@ -15,7 +15,7 @@
 import os
 import logging
 from threading import Lock
-from flask import Flask, Response, jsonify, request, make_response, json
+from flask import Flask, Response, jsonify, request, make_response, json, url_for
 
 # Create Flask application
 app = Flask(__name__)
@@ -103,7 +103,10 @@ def create_pets():
         message = { 'error' : 'Data is not valid' }
         rc = HTTP_400_BAD_REQUEST
 
-    return make_response(jsonify(message), rc)
+    response = make_response(jsonify(message), rc)
+    if rc == HTTP_201_CREATED:
+        response.headers['Location'] = url_for('get_pets', id=id)
+    return response
 
 ######################################################################
 # UPDATE AN EXISTING PET
