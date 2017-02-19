@@ -1,6 +1,8 @@
 # run with:
 # python -m unittest discover
+# nosetests --nologcapture
 
+import logging
 import unittest
 import json
 import server
@@ -20,6 +22,9 @@ class TestPetServer(unittest.TestCase):
 
     def setUp(self):
         server.app.debug = True
+        server.app.logger.addHandler(logging.StreamHandler())
+        server.app.logger.setLevel(logging.CRITICAL)
+
         self.app = server.app.test_client()
         server.pets = { 1: {'id': 1, 'name': 'fido', 'kind': 'dog'}, 2: {'id': 2, 'name': 'kitty', 'kind': 'cat'} }
         server.current_pet_id = 2

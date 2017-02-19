@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import logging
 from threading import Lock
 from flask import Flask, Response, jsonify, request, json
 
@@ -142,6 +143,13 @@ def is_valid(data):
         app.logger.error('Invalid Content Type error')
 
     return valid
+
+@app.before_first_request
+def setup_logging():
+    if not app.debug:
+        # In production mode, add log handler to sys.stderr.
+        app.logger.addHandler(logging.StreamHandler())
+        app.logger.setLevel(logging.INFO)
 
 
 ######################################################################
