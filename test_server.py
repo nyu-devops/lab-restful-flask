@@ -23,36 +23,36 @@ class TestPetServer(unittest.TestCase):
 
     def setUp(self):
         server.app.debug = True
-        server.app.logger.addHandler(logging.StreamHandler())
-        server.app.logger.setLevel(logging.CRITICAL)
-
         self.app = server.app.test_client()
-        server.pets = [ {'id': 1, 'name': 'fido', 'kind': 'dog'}, {'id': 2, 'name': 'kitty', 'kind': 'cat'} ]
-        server.current_pet_id = 2
+        server.Pet(0,'fido','dog').save()
+        server.Pet(0,'kitty','cat').save()
+
+    def tearDown(self):
+        server.Pet.remove_all()
 
     def test_index(self):
         resp = self.app.get('/')
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         self.assertTrue ('Pet Demo REST API Service' in resp.data)
-        self.assertTrue( resp.status_code == HTTP_200_OK )
 
     def test_get_pet_list(self):
         resp = self.app.get('/pets')
         #print 'resp_data: ' + resp.data
-        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         self.assertTrue( len(resp.data) > 0 )
 
     def test_get_pet(self):
         resp = self.app.get('/pets/2')
         #print 'resp_data: ' + resp.data
-        self.assertTrue( resp.status_code == HTTP_200_OK )
+        self.assertEqual( resp.status_code, HTTP_200_OK )
         data = json.loads(resp.data)
-        self.assertTrue (data['name'] == 'kitty')
+        self.assertEqual (data['name'], 'kitty')
 
     def test_create_pet(self):
         # save the current number of pets for later comparrison
         pet_count = self.get_pet_count()
         # add a new pet
-        new_pet = {'name': 'sammy', 'kind': 'snake'}
+        new_pet = {'name': 'sammy', 'category': 'snake'}
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data, content_type='application/json')
         self.assertTrue( resp.status_code == HTTP_201_CREATED )
@@ -71,15 +71,15 @@ class TestPetServer(unittest.TestCase):
         self.assertIn( new_json, data )
 
     def test_update_pet(self):
-        new_kitty = {'name': 'kitty', 'kind': 'tabby'}
+        new_kitty = {'name': 'kitty', 'category': 'tabby'}
         data = json.dumps(new_kitty)
         resp = self.app.put('/pets/2', data=data, content_type='application/json')
         self.assertEqual( resp.status_code, HTTP_200_OK )
         new_json = json.loads(resp.data)
-        self.assertEqual (new_json['kind'], 'tabby')
+        self.assertEqual (new_json['category'], 'tabby')
 
     def test_update_pet_with_no_name(self):
-        new_pet = {'kind': 'dog'}
+        new_pet = {'category': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.put('/pets/2', data=data, content_type='application/json')
         self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
@@ -95,13 +95,13 @@ class TestPetServer(unittest.TestCase):
         self.assertEqual( new_count, pet_count - 1)
 
     def test_create_pet_with_no_name(self):
-        new_pet = {'kind': 'dog'}
+        new_pet = {'category': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data, content_type='application/json')
         self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
 
     def test_create_pet_with_no_content_type(self):
-        new_pet = {'kind': 'dog'}
+        new_pet = {'category': 'dog'}
         data = json.dumps(new_pet)
         resp = self.app.post('/pets', data=data)
         self.assertEqual( resp.status_code, HTTP_400_BAD_REQUEST )
@@ -111,12 +111,12 @@ class TestPetServer(unittest.TestCase):
         self.assertEqual( resp.status_code, HTTP_404_NOT_FOUND )
 
     def test_query_pet_list(self):
-        resp = self.app.get('/pets', query_string='kind=dog')
+        resp = self.app.get('/pets', query_string='category=dog')
         self.assertEqual( resp.status_code, HTTP_200_OK )
         self.assertTrue( len(resp.data) > 0 )
         data = json.loads(resp.data)
         query_item = data[0]
-        self.assertEqual(query_item['kind'], 'dog')
+        self.assertEqual(query_item['category'], 'dog')
 
 
 ######################################################################

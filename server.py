@@ -14,12 +14,15 @@
 
 import os
 import logging
-from threading import Lock
-from flask import Flask, Response, jsonify, request, make_response, json, url_for
+from flask import Flask, Response, jsonify, request, json, url_for, make_response
+from models import Pet, DataValidationError
+
+# Pull options from environment
+debug = (os.getenv('DEBUG', 'False') == 'True')
+port = os.getenv('PORT', '5000')
 
 # Create Flask application
 app = Flask(__name__)
-app.config['LOGGING_LEVEL'] = logging.INFO
 
 # Status Codes
 HTTP_200_OK = 200
@@ -29,34 +32,38 @@ HTTP_400_BAD_REQUEST = 400
 HTTP_404_NOT_FOUND = 404
 HTTP_409_CONFLICT = 409
 
-# Lock for thread-safe counter increment
-lock = Lock()
+######################################################################
+# Error Handlers
+######################################################################
+@app.errorhandler(DataValidationError)
+def request_validation_error(e):
+    return bad_request(e)
 
-# dummy data for testing
-current_pet_id = 2
-pets = [
-    {
-        'id': 1,
-        'name': 'fido',
-        'kind': 'dog'
-    },
-    {
-        'id': 2,
-        'name': 'kitty',
-        'kind': 'cat'
-    }
-]
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify(status=400, error='Bad Request', message=e.message), 400
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify(status=404, error='Not Found', message=e.message), 404
+
+@app.errorhandler(405)
+def method_not_supported(e):
+    return jsonify(status=405, error='Method not Allowed', message='Your request method is not supported. Check your HTTP method and try again.'), 405
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return jsonify(status=500, error='Internal Server Error', message=e.message), 500
+
 
 ######################################################################
 # GET INDEX
 ######################################################################
 @app.route('/')
 def index():
-    pets_url = request.base_url + "pets"
-    return make_response(jsonify(name='Pet Demo REST API Service',
+    return jsonify(name='Pet Demo REST API Service',
                    version='1.0',
-                   url=pets_url
-                   ), HTTP_200_OK)
+                   url=url_for('list_pets', _external=True)), HTTP_200_OK
 
 ######################################################################
 # LIST ALL PETS
@@ -64,28 +71,28 @@ def index():
 @app.route('/pets', methods=['GET'])
 def list_pets():
     results = []
-    kind = request.args.get('kind')
-    if kind:
-        results = [pet for pet in pets if pet['kind'] == kind]
+    category = request.args.get('category')
+    if category:
+        results = Pet.find_by_category(category)
     else:
-        results = pets
+        results = Pet.all()
 
-    return make_response(jsonify(results), HTTP_200_OK)
+    return jsonify([pet.serialize() for pet in results]), HTTP_200_OK
 
 ######################################################################
 # RETRIEVE A PET
 ######################################################################
 @app.route('/pets/<int:id>', methods=['GET'])
 def get_pets(id):
-    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
-    if len(index) > 0:
-        message = pets[index[0]]
+    pet = Pet.find(id)
+    if pet:
+        message = pet.serialize()
         rc = HTTP_200_OK
     else:
         message = { 'error' : 'Pet with id: %s was not found' % str(id) }
         rc = HTTP_404_NOT_FOUND
 
-    return make_response(jsonify(message), rc)
+    return jsonify(message), rc
 
 ######################################################################
 # ADD A NEW PET
@@ -93,19 +100,12 @@ def get_pets(id):
 @app.route('/pets', methods=['POST'])
 def create_pets():
     payload = request.get_json()
-    if is_valid(payload):
-        id = next_index()
-        pet = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
-        pets.append(pet)
-        message = pet
-        rc = HTTP_201_CREATED
-    else:
-        message = { 'error' : 'Data is not valid' }
-        rc = HTTP_400_BAD_REQUEST
-
-    response = make_response(jsonify(message), rc)
-    if rc == HTTP_201_CREATED:
-        response.headers['Location'] = url_for('get_pets', id=id)
+    pet = Pet()
+    pet.deserialize(payload)
+    pet.save()
+    message = pet.serialize()
+    response = make_response(jsonify(message), HTTP_201_CREATED)
+    response.headers['Location'] = url_for('get_pets', id=pet.id, _external=True)
     return response
 
 ######################################################################
@@ -113,71 +113,34 @@ def create_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['PUT'])
 def update_pets(id):
-    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
-    if len(index) > 0:
+    pet = Pet.find(id)
+    if pet:
         payload = request.get_json()
-        if is_valid(payload):
-            pets[index[0]] = {'id': id, 'name': payload['name'], 'kind': payload['kind']}
-            message = pets[index[0]]
-            rc = HTTP_200_OK
-        else:
-            message = { 'error' : 'Pet data was not valid' }
-            rc = HTTP_400_BAD_REQUEST
+        pet.deserialize(payload)
+        pet.save()
+        message = pet.serialize()
+        rc = HTTP_200_OK
     else:
-        message = { 'error' : 'Pet %s was not found' % id }
+        message = { 'error' : 'Pet with id: %s was not found' % str(id) }
         rc = HTTP_404_NOT_FOUND
 
-    return make_response(jsonify(message), rc)
+    return jsonify(message), rc
 
 ######################################################################
 # DELETE A PET
 ######################################################################
 @app.route('/pets/<int:id>', methods=['DELETE'])
 def delete_pets(id):
-    index = [i for i, pet in enumerate(pets) if pet['id'] == id]
-    if len(index) > 0:
-        del pets[index[0]]
+    pet = Pet.find(id)
+    if pet:
+        pet.delete()
     return make_response('', HTTP_204_NO_CONTENT)
-
-######################################################################
-#  U T I L I T Y   F U N C T I O N S
-######################################################################
-def next_index():
-    global current_pet_id
-    with lock:
-        current_pet_id += 1
-    return current_pet_id
-
-def is_valid(data):
-    valid = False
-    try:
-        name = data['name']
-        kind = data['kind']
-        valid = True
-    except KeyError as err:
-        app.logger.warn('Missing parameter error: %s', err)
-    except TypeError as err:
-        app.logger.warn('Invalid Content Type error: %s', err)
-
-    return valid
-
-@app.before_first_request
-def setup_logging():
-    if not app.debug:
-        # In production mode, add log handler to sys.stderr.
-        handler = logging.StreamHandler()
-        handler.setLevel(app.config['LOGGING_LEVEL'])
-        # formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
-        #'%Y-%m-%d %H:%M:%S'
-        formatter = logging.Formatter('[%(asctime)s] - %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
-        handler.setFormatter(formatter)
-        app.logger.addHandler(handler)
 
 ######################################################################
 #   M A I N
 ######################################################################
 if __name__ == "__main__":
-    # Pull options from environment
-    debug = (os.getenv('DEBUG', 'False') == 'True')
-    port = os.getenv('PORT', '5000')
+    # dummy data for testing
+    Pet(0,'fido','dog').save()
+    Pet(0,'kitty','cat').save()
     app.run(host='0.0.0.0', port=int(port), debug=debug)
