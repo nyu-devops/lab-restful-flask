@@ -105,7 +105,7 @@ def create_pets():
     pet.save()
     message = pet.serialize()
     response = make_response(jsonify(message), HTTP_201_CREATED)
-    response.headers['Location'] = url_for('get_pets', id=pet.id, _external=True)
+    response.headers['Location'] = pet.self_url()
     return response
 
 ######################################################################
