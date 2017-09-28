@@ -12,14 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Pet Shop Demo
+
+This is an example of a pet shop service written with Python Flask
+It demonstraits how a RESTful service should be implemented.
+
+Paths
+-----
+GET  /pets - Retrieves a list of pets from the database
+GET  /pets{id} - Retrirves a Pet with a specific id
+POST /pets - Creates a Pet in the datbase from the posted database
+PUT  /pets/{id} - Updates a Pet in the database fom the posted database
+DELETE /pets{id} - Removes a Pet from the database that matches the id
+"""
+
 import os
 import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
 from models import Pet, DataValidationError
 
 # Pull options from environment
-debug = (os.getenv('DEBUG', 'False') == 'True')
-port = os.getenv('PORT', '5000')
+DEBUG = (os.getenv('DEBUG', 'False') == 'True')
+PORT = os.getenv('PORT', '5000')
 
 # Create Flask application
 app = Flask(__name__)
@@ -36,24 +51,31 @@ HTTP_409_CONFLICT = 409
 # Error Handlers
 ######################################################################
 @app.errorhandler(DataValidationError)
-def request_validation_error(e):
-    return bad_request(e)
+def request_validation_error(error):
+    """ Handles all data validation issues from the model """
+    return bad_request(error)
 
 @app.errorhandler(400)
-def bad_request(e):
-    return jsonify(status=400, error='Bad Request', message=e.message), 400
+def bad_request(error):
+    """ Handles requests that have bad or malformed data """
+    return jsonify(status=400, error='Bad Request', message=error.message), 400
 
 @app.errorhandler(404)
-def not_found(e):
-    return jsonify(status=404, error='Not Found', message=e.message), 404
+def not_found(error):
+    """ Handles Pets that cannot be found """
+    return jsonify(status=404, error='Not Found', message=error.message), 404
 
 @app.errorhandler(405)
-def method_not_supported(e):
-    return jsonify(status=405, error='Method not Allowed', message='Your request method is not supported. Check your HTTP method and try again.'), 405
+def method_not_supported(error):
+    """ Handles bad method calls """
+    return jsonify(status=405, error='Method not Allowed',
+                   message='Your request method is not supported.' \
+                   ' Check your HTTP method and try again.'), 405
 
 @app.errorhandler(500)
-def internal_server_error(e):
-    return jsonify(status=500, error='Internal Server Error', message=e.message), 500
+def internal_server_error(error):
+    """ Handles catostrophic errors """
+    return jsonify(status=500, error='Internal Server Error', message=error.message), 500
 
 
 ######################################################################
@@ -61,6 +83,7 @@ def internal_server_error(e):
 ######################################################################
 @app.route('/')
 def index():
+    """ Return something useful by default """
     return jsonify(name='Pet Demo REST API Service',
                    version='1.0',
                    url=url_for('list_pets', _external=True)), HTTP_200_OK
@@ -70,6 +93,7 @@ def index():
 ######################################################################
 @app.route('/pets', methods=['GET'])
 def list_pets():
+    """ Retrieves a list of pets from the database """
     results = []
     category = request.args.get('category')
     if category:
@@ -84,28 +108,30 @@ def list_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['GET'])
 def get_pets(id):
+    """ Retrieves a Pet with a specific id """
     pet = Pet.find(id)
     if pet:
         message = pet.serialize()
-        rc = HTTP_200_OK
+        return_code = HTTP_200_OK
     else:
-        message = { 'error' : 'Pet with id: %s was not found' % str(id) }
-        rc = HTTP_404_NOT_FOUND
+        message = {'error' : 'Pet with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
 
-    return jsonify(message), rc
+    return jsonify(message), return_code
 
 ######################################################################
 # ADD A NEW PET
 ######################################################################
 @app.route('/pets', methods=['POST'])
 def create_pets():
+    """ Creates a Pet in the datbase from the posted database """
     payload = request.get_json()
     pet = Pet()
     pet.deserialize(payload)
     pet.save()
     message = pet.serialize()
     response = make_response(jsonify(message), HTTP_201_CREATED)
-    response.headers['Location'] = pet.self_url()
+    response.headers['Location'] = url_for('get_pets', id=pet.id, _external=True)
     return response
 
 ######################################################################
@@ -113,24 +139,26 @@ def create_pets():
 ######################################################################
 @app.route('/pets/<int:id>', methods=['PUT'])
 def update_pets(id):
+    """ Updates a Pet in the database fom the posted database """
     pet = Pet.find(id)
     if pet:
         payload = request.get_json()
         pet.deserialize(payload)
         pet.save()
         message = pet.serialize()
-        rc = HTTP_200_OK
+        return_code = HTTP_200_OK
     else:
-        message = { 'error' : 'Pet with id: %s was not found' % str(id) }
-        rc = HTTP_404_NOT_FOUND
+        message = {'error' : 'Pet with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
 
-    return jsonify(message), rc
+    return jsonify(message), return_code
 
 ######################################################################
 # DELETE A PET
 ######################################################################
 @app.route('/pets/<int:id>', methods=['DELETE'])
 def delete_pets(id):
+    """ Removes a Pet from the database that matches the id """
     pet = Pet.find(id)
     if pet:
         pet.delete()
@@ -141,6 +169,6 @@ def delete_pets(id):
 ######################################################################
 if __name__ == "__main__":
     # dummy data for testing
-    Pet(0,'fido','dog').save()
-    Pet(0,'kitty','cat').save()
-    app.run(host='0.0.0.0', port=int(port), debug=debug)
+    Pet(0, 'fido', 'dog').save()
+    Pet(0, 'kitty', 'cat').save()
+    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

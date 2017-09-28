@@ -1,4 +1,4 @@
-# Copyright 2016 John Rofrano. All Rights Reserved.
+# Copyright 2016, 2017 John Rofrano. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -11,74 +11,120 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from flask import url_for
+"""
+Models for Pet Demo Service
+
+All of the models are stored in this module
+
+Models
+------
+Pet - A Pet used in the Pet Store
+
+"""
+import threading
 
 class DataValidationError(Exception):
+    """ Used for an data validation errors when deserializing """
     pass
 
 class Pet(object):
-    __data = []
-    __index = 0
+    """
+    Class that represents a Pet
 
-    def __init__(self, id=0, name=None, category=None):
+    This version uses an in-memory collection of pets for testing
+    """
+    lock = threading.Lock()
+    data = []
+    index = 0
+
+    def __init__(self, id=0, name='', category=''):
+        """ Initialize a Pet """
         self.id = id
         self.name = name
         self.category = category
 
     def save(self):
+        """
+        Saves a Pet to the data store
+        """
         if self.id == 0:
             self.id = self.__next_index()
-            Pet.__data.append(self)
+            Pet.data.append(self)
         else:
-            for i in range(len(Pet.__data)):
-                if Pet.__data[i].id == self.id:
-                    Pet.__data[i] = self
+            for i in range(len(Pet.data)):
+                if Pet.data[i].id == self.id:
+                    Pet.data[i] = self
                     break
 
     def delete(self):
-        Pet.__data.remove(self)
-
-    def __next_index(self):
-        Pet.__index += 1
-        return Pet.__index
+        """ Removes a Pet from the data store """
+        Pet.data.remove(self)
 
     def serialize(self):
-        return { "id": self.id, "name": self.name, "category": self.category }
-
-    def self_url(self):
-        return url_for('get_pets', id=self.id, _external=True)
+        """ Serializes a Pet into a dictionary """
+        return {"id": self.id, "name": self.name, "category": self.category}
 
     def deserialize(self, data):
+        """
+        Deserializes a Pet from a dictionary
+
+        Args:
+            data (dict): A dictionary containing the Pet data
+        """
         if not isinstance(data, dict):
             raise DataValidationError('Invalid pet: body of request contained bad or no data')
-        id = 0
         if data.has_key('id'):
             self.id = data['id']
         try:
             self.name = data['name']
             self.category = data['category']
-        except KeyError as e:
-            raise DataValidationError('Invalid pet: missing ' + e.args[0])
+        except KeyError as err:
+            raise DataValidationError('Invalid pet: missing ' + err.args[0])
+        return
+
+    @staticmethod
+    def __next_index():
+        """ Generates the next index in a continual sequence """
+        with Pet.lock:
+            Pet.index += 1
+        return Pet.index
 
     @staticmethod
     def all():
-        return [pet for pet in Pet.__data]
+        """ Returns all of the Pets in the database """
+        return [pet for pet in Pet.data]
 
     @staticmethod
     def remove_all():
-        del Pet.__data[:]
-        Pet.__index = 0
-        return Pet.__data
+        """ Removes all of the Pets from the database """
+        del Pet.data[:]
+        Pet.index = 0
+        return Pet.data
 
     @staticmethod
-    def find(id):
-        if len(Pet.__data) == 0:
+    def find(pet_id):
+        """ Finds a Pet by it's ID """
+        if not Pet.data:
             return None
-        pets = [pet for pet in Pet.__data if pet.id == id]
-        if len(pets) > 0:
+        pets = [pet for pet in Pet.data if pet.id == pet_id]
+        if pets:
             return pets[0]
         return None
 
     @staticmethod
     def find_by_category(category):
-        return [pet for pet in Pet.__data if pet.category == category]
+        """ Returns all of the Pets in a category
+
+        Args:
+            category (string): the category of the Pets you want to match
+        """
+        return [pet for pet in Pet.data if pet.category == category]
+
+    @staticmethod
+    def find_by_name(name):
+        """ Returns all Pets with the given name
+
+        Args:
+            name (string): the name of the Pets you want to match
+        """
+        return [pet for pet in Pet.data if pet.name == name]
