@@ -22,7 +22,7 @@ HTTP_409_CONFLICT = 409
 class TestPetServer(unittest.TestCase):
 
     def setUp(self):
-        server.app.debug = True
+        server.app.debug = False
         self.app = server.app.test_client()
         server.Pet(0,'fido','dog').save()
         server.Pet(0,'kitty','cat').save()
