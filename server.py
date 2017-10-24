@@ -28,6 +28,7 @@ DELETE /pets{id} - Removes a Pet from the database that matches the id
 """
 
 import os
+import sys
 import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
 from models import Pet, DataValidationError
@@ -164,10 +165,39 @@ def delete_pets(id):
         pet.delete()
     return make_response('', HTTP_204_NO_CONTENT)
 
+
+######################################################################
+#   U T I L I T Y   F U N C T I O N S
+######################################################################
+def initialize_logging(log_level=logging.INFO):
+    """ Initialized the default logging to STDOUT """
+    if not app.debug:
+        print 'Setting up logging...'
+        # Set up default logging for submodules to use STDOUT
+        # datefmt='%m/%d/%Y %I:%M:%S %p'
+        fmt = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+        logging.basicConfig(stream=sys.stdout, level=log_level, format=fmt)
+        # Make a new log handler that uses STDOUT
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter(fmt))
+        handler.setLevel(log_level)
+        # Remove the Flask default handlers and use our own
+        handler_list = list(app.logger.handlers)
+        for log_handler in handler_list:
+            app.logger.removeHandler(log_handler)
+        app.logger.addHandler(handler)
+        app.logger.setLevel(log_level)
+        app.logger.info('Logging handler established')
+
+
 ######################################################################
 #   M A I N
 ######################################################################
 if __name__ == "__main__":
+    print "*********************************"
+    print " P E T   S H O P   S E R V I C E "
+    print "*********************************"
+    initialize_logging()
     # dummy data for testing
     Pet(0, 'fido', 'dog').save()
     Pet(0, 'kitty', 'cat').save()
