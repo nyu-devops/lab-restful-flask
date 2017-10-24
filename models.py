@@ -73,8 +73,6 @@ class Pet(object):
         """
         if not isinstance(data, dict):
             raise DataValidationError('Invalid pet: body of request contained bad or no data')
-        if data.has_key('id'):
-            self.id = data['id']
         try:
             self.name = data['name']
             self.category = data['category']
