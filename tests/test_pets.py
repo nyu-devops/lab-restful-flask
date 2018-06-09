@@ -21,7 +21,7 @@ Test cases can be run with:
 """
 
 import unittest
-from models import Pet, DataValidationError
+from app.models import Pet, DataValidationError
 
 ######################################################################
 #  T E S T   C A S E S

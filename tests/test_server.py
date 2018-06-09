@@ -24,8 +24,8 @@ import logging
 import unittest
 import json
 from flask_api import status    # HTTP Status Codes
-from models import DataValidationError
-import server
+from app.models import DataValidationError
+import app.server as server
 
 ######################################################################
 #  T E S T   C A S E S

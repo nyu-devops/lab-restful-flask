@@ -80,49 +80,49 @@ class Pet(object):
             raise DataValidationError('Invalid pet: missing ' + err.args[0])
         return
 
-    @staticmethod
-    def __next_index():
+    @classmethod
+    def __next_index(cls):
         """ Generates the next index in a continual sequence """
-        with Pet.lock:
-            Pet.index += 1
-        return Pet.index
+        with cls.lock:
+            cls.index += 1
+        return cls.index
 
-    @staticmethod
-    def all():
+    @classmethod
+    def all(cls):
         """ Returns all of the Pets in the database """
-        return [pet for pet in Pet.data]
+        return [pet for pet in cls.data]
 
-    @staticmethod
-    def remove_all():
+    @classmethod
+    def remove_all(cls):
         """ Removes all of the Pets from the database """
-        del Pet.data[:]
-        Pet.index = 0
-        return Pet.data
+        del cls.data[:]
+        cls.index = 0
+        return cls.data
 
-    @staticmethod
-    def find(pet_id):
+    @classmethod
+    def find(cls, pet_id):
         """ Finds a Pet by it's ID """
-        if not Pet.data:
+        if not cls.data:
             return None
-        pets = [pet for pet in Pet.data if pet.id == pet_id]
+        pets = [pet for pet in cls.data if pet.id == pet_id]
         if pets:
             return pets[0]
         return None
 
-    @staticmethod
-    def find_by_category(category):
+    @classmethod
+    def find_by_category(cls, category):
         """ Returns all of the Pets in a category
 
         Args:
             category (string): the category of the Pets you want to match
         """
-        return [pet for pet in Pet.data if pet.category == category]
+        return [pet for pet in cls.data if pet.category == category]
 
-    @staticmethod
-    def find_by_name(name):
+    @classmethod
+    def find_by_name(cls, name):
         """ Returns all Pets with the given name
 
         Args:
             name (string): the name of the Pets you want to match
         """
-        return [pet for pet in Pet.data if pet.name == name]
+        return [pet for pet in cls.data if pet.name == name]

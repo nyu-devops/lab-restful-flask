@@ -145,6 +145,7 @@ def update_pets(id):
     if pet:
         payload = request.get_json()
         pet.deserialize(payload)
+        pet.id = id
         pet.save()
         message = pet.serialize()
         return_code = HTTP_200_OK
