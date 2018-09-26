@@ -53,6 +53,8 @@ Vagrant.configure(2) do |config|
     sudo apt-get update
     sudo apt-get install -y git python-pip python-dev
     sudo apt-get -y autoremove
+    # Make sure PIP is at the latest level
+    pip install --upgrade pip
     # Install app dependencies
     cd /vagrant
     sudo pip install -r requirements.txt
