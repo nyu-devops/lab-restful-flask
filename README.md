@@ -12,6 +12,7 @@ Download [VirtualBox](https://www.virtualbox.org/)
 Download [Vagrant](https://www.vagrantup.com/)
 
 Clone the project to your development folder and create your Vagrant vm
+
 ```
     $ git clone https://github.com/nyu-devops/lab-restful-flask.git
     $ cd lab-restful-flask
@@ -19,24 +20,40 @@ Clone the project to your development folder and create your Vagrant vm
 ```
 
 Once the VM is up you can use it with:
+
 ```
     $ vagrant ssh
     $ cd /vagrant
-    $ python app/server.py
+    $ python app/service.py
+```
+
+You can also run the server using the `flask` command with:
+
+```
+    $ export FLASK_APP=app/service.py
+    $ flask run
+```
+
+or all on one line with:
+```
+    $ FLASK_APP=app/service.py flask run
 ```
 
 Run the tests suite with:
+
 ```
     $ nosetests
 ```
 
 When you are done, you can use `Ctrl+C` to stop the server and then exit and shut down the vm with:
+
 ```
     $ exit
     $ vagrant halt
 ```
 
 If the VM is no longer needed you can remove it with:
+
 ```
     $ vagrant destroy
 ```

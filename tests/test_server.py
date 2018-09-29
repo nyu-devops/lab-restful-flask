@@ -25,7 +25,7 @@ import unittest
 import json
 from flask_api import status    # HTTP Status Codes
 from app.models import DataValidationError
-import app.server as server
+import app.service as service
 
 ######################################################################
 #  T E S T   C A S E S
@@ -36,19 +36,19 @@ class TestPetServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ Run once before all tests """
-        server.app.debug = False
-        server.initialize_logging(logging.ERROR)
+        service.app.debug = False
+        service.initialize_logging(logging.ERROR)
 
     def setUp(self):
         """ Runs before each test """
-        server.Pet.remove_all()
-        server.Pet(0, 'fido', 'dog').save()
-        server.Pet(0, 'kitty', 'cat').save()
-        self.app = server.app.test_client()
+        service.Pet.remove_all()
+        service.Pet(0, 'fido', 'dog').save()
+        service.Pet(0, 'kitty', 'cat').save()
+        self.app = service.app.test_client()
 
     def tearDown(self):
         """ Runs after each test """
-        server.Pet.remove_all()
+        service.Pet.remove_all()
 
     def test_index(self):
         """ Test the Home Page """
