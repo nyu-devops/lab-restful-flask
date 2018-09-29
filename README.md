@@ -44,7 +44,7 @@ using the `flask` command with:
 or you can specify this all on one like with:
 
 ```
-env FLASK_APP=app/service.py flask run -h 0.0.0.0
+    $ env FLASK_APP=app/service.py flask run -h 0.0.0.0
 ```
 
 Note that we need to bind the host with `-h 0.0.0.0` so that the forwarded ports work correctly in **Vagrant**
@@ -53,7 +53,7 @@ If you were running this locally on your own computer you would not need this ex
 Finally you can use the `honcho` command to start `gunicorn` to run the servce with:
 
 ```
-honcho start
+    $ honcho start
 ```
 
 **Honcho** uses the `Procfile` to determine how to run the service. This file uses **Gunicorn** which is how you would start the server in production
