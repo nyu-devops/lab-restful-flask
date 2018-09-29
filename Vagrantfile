@@ -10,6 +10,7 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   #config.vm.box = "ubuntu/trusty64"
   config.vm.box = "ubuntu/xenial64"
+  config.vm.hostname = "restful"
 
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network "forwarded_port", guest: 80, host: 8080
@@ -25,7 +26,7 @@ Vagrant.configure(2) do |config|
   #
   config.vm.provider "virtualbox" do |vb|
     # Customize the amount of memory on the VM:
-    vb.memory = "512"
+    vb.memory = "256"
     vb.cpus = 1
     # Fixes some DNS issues on some networks
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
@@ -37,7 +38,7 @@ Vagrant.configure(2) do |config|
     config.vm.provision "file", source: "~/.gitconfig", destination: "~/.gitconfig"
   end
 
-  # Copy the ssh keys into the vm
+  # Copy the ssh keys into the vm for git access
   if File.exists?(File.expand_path("~/.ssh/id_rsa"))
     config.vm.provision "file", source: "~/.ssh/id_rsa", destination: "~/.ssh/id_rsa"
   end
@@ -46,20 +47,23 @@ Vagrant.configure(2) do |config|
     config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
   end
 
+  # Copy your .vimrc file so that your vi looks like you expect
+  if File.exists?(File.expand_path("~/.vimrc"))
+    config.vm.provision "file", source: "~/.vimrc", destination: "~/.vimrc"
+  end
+
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-    sudo apt-get update
-    sudo apt-get install -y git python-pip python-dev
-    sudo apt-get -y autoremove
-    # Make sure PIP is at the latest level
-    pip install --upgrade pip
+    apt-get update
+    apt-get install -y git python-pip python-dev
+    apt-get -y autoremove
+    # make sure that pip is up to date
+    #pip install --upgrade pip
     # Install app dependencies
     cd /vagrant
-    sudo pip install -r requirements.txt
-    # Make vi look nice
-    sudo -u ubuntu echo "colorscheme desert" > ~/.vimrc
+    pip install -r requirements.txt
   SHELL
 
 end

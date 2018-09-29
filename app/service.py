@@ -30,15 +30,13 @@ DELETE /pets{id} - Removes a Pet from the database that matches the id
 import os
 import sys
 import logging
-from flask import Flask, Response, jsonify, request, json, url_for, make_response
+from flask import Response, jsonify, request, json, url_for, make_response
+from . import app
 from models import Pet, DataValidationError
 
 # Pull options from environment
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 PORT = os.getenv('PORT', '5000')
-
-# Create Flask application
-app = Flask(__name__)
 
 # Status Codes
 HTTP_200_OK = 200
@@ -95,6 +93,7 @@ def index():
 @app.route('/pets', methods=['GET'])
 def list_pets():
     """ Retrieves a list of pets from the database """
+    app.logger.info('Listing pets')
     results = []
     category = request.args.get('category')
     if category:
@@ -110,6 +109,7 @@ def list_pets():
 @app.route('/pets/<int:id>', methods=['GET'])
 def get_pets(id):
     """ Retrieves a Pet with a specific id """
+    app.logger.info('Finding a Pet with id [{}]'.format(id))
     pet = Pet.find(id)
     if pet:
         message = pet.serialize()
@@ -126,6 +126,7 @@ def get_pets(id):
 @app.route('/pets', methods=['POST'])
 def create_pets():
     """ Creates a Pet in the datbase from the posted database """
+    app.logger.info('Creating a new pet')
     payload = request.get_json()
     pet = Pet()
     pet.deserialize(payload)
@@ -141,6 +142,7 @@ def create_pets():
 @app.route('/pets/<int:id>', methods=['PUT'])
 def update_pets(id):
     """ Updates a Pet in the database fom the posted database """
+    app.logger.info('Updating a Pet with id [{}]'.format(id))
     pet = Pet.find(id)
     if pet:
         payload = request.get_json()
@@ -161,11 +163,23 @@ def update_pets(id):
 @app.route('/pets/<int:id>', methods=['DELETE'])
 def delete_pets(id):
     """ Removes a Pet from the database that matches the id """
+    app.logger.info('Deleting a Pet with id [{}]'.format(id))
     pet = Pet.find(id)
     if pet:
         pet.delete()
     return make_response('', HTTP_204_NO_CONTENT)
 
+
+######################################################################
+# Demo DATA
+######################################################################
+@app.route('/pets/demo', methods=['POST'])
+def create_demo_data():
+    """ Loads a few Pets into the database for demos """
+    app.logger.info('Loading demo Pets')
+    Pet(0, 'fido', 'dog').save()
+    Pet(0, 'kitty', 'cat').save()
+    return make_response(jsonify(message='Created demo pets'), HTTP_201_CREATED)
 
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S
@@ -189,17 +203,3 @@ def initialize_logging(log_level=logging.INFO):
         app.logger.addHandler(handler)
         app.logger.setLevel(log_level)
         app.logger.info('Logging handler established')
-
-
-######################################################################
-#   M A I N
-######################################################################
-if __name__ == "__main__":
-    print "*********************************"
-    print " P E T   S H O P   S E R V I C E "
-    print "*********************************"
-    initialize_logging()
-    # dummy data for testing
-    Pet(0, 'fido', 'dog').save()
-    Pet(0, 'kitty', 'cat').save()
-    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
