@@ -1,5 +1,9 @@
 # lab-restful-flask
 
+[![Build Status](https://travis-ci.org/nyu-devops/lab-restful-flask.svg?branch=master)](https://travis-ci.org/rofrano/nyu-lab-travis-ci)
+[![Codecov](https://img.shields.io/codecov/c/github/nyu-devops/lab-restful-flask.svg)]()
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 This repo demonstrates how to create a simple RESTful service using Python Flask.
 The resource model has no persistence to keep the application simple. It's purpose is to show the correct API and return codes that should be used for a REST API.
 
@@ -43,7 +47,7 @@ or you can specify this all on one like with:
 env FLASK_APP=app/service.py flask run -h 0.0.0.0
 ```
 
-Note that we need to bind the host with `-h 0.0.0.0` so that the forwarded ports work correctly in *Vagrant*
+Note that we need to bind the host with `-h 0.0.0.0` so that the forwarded ports work correctly in **Vagrant**
 If you were running this locally on your own computer you would not need this extra parameter.
 
 Finally you can use the `honcho` command to start `gunicorn` to run the servce with:
@@ -52,7 +56,7 @@ Finally you can use the `honcho` command to start `gunicorn` to run the servce w
 honcho start
 ```
 
-*Honcho* uses the `Procfile` to determine how to run the service. This file uses *Gunicorn* which is how you would start the server in production
+**Honcho** uses the `Procfile` to determine how to run the service. This file uses **Gunicorn** which is how you would start the server in production
 
 ## Testing
 
