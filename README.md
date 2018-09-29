@@ -24,20 +24,37 @@ Once the VM is up you can use it with:
 ```
     $ vagrant ssh
     $ cd /vagrant
-    $ python app/service.py
+    $ python run.py
 ```
 
-You can also run the server using the `flask` command with:
+## Alternative starting of the service
+
+For running the service during development and debugging, you can also run the server
+using the `flask` command with:
 
 ```
     $ export FLASK_APP=app/service.py
-    $ flask run
+    $ flask run -h 0.0.0.0
 ```
 
-or all on one line with:
+or you can specify this all on one like with:
+
 ```
-    $ FLASK_APP=app/service.py flask run
+env FLASK_APP=app/service.py flask run -h 0.0.0.0
 ```
+
+Note that we need to bind the host with `-h 0.0.0.0` so that the forwarded ports work correctly in *Vagrant*
+If you were running this locally on your own computer you would not need this extra parameter.
+
+Finally you can use the `honcho` command to start `gunicorn` to run the servce with:
+
+```
+honcho start
+```
+
+*Honcho* uses the `Procfile` to determine how to run the service. This file uses *Gunicorn* which is how you would start the server in production
+
+## Testing
 
 Run the tests suite with:
 
@@ -45,7 +62,11 @@ Run the tests suite with:
     $ nosetests
 ```
 
-When you are done, you can use `Ctrl+C` to stop the server and then exit and shut down the vm with:
+When you are done, you can use `Ctrl+C` to stop the server.
+
+## Shutdown
+
+When you are done, you can use `exit` to get out of the virtual machime and shut down the vm with:
 
 ```
     $ exit

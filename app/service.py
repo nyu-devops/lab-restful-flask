@@ -203,17 +203,3 @@ def initialize_logging(log_level=logging.INFO):
         app.logger.addHandler(handler)
         app.logger.setLevel(log_level)
         app.logger.info('Logging handler established')
-
-
-######################################################################
-#   M A I N
-######################################################################
-if __name__ == "__main__":
-    print "*********************************"
-    print " P E T   S H O P   S E R V I C E "
-    print "*********************************"
-    initialize_logging()
-    # dummy data for testing
-    Pet(0, 'fido', 'dog').save()
-    Pet(0, 'kitty', 'cat').save()
-    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
