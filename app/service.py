@@ -106,16 +106,16 @@ def list_pets():
 ######################################################################
 # RETRIEVE A PET
 ######################################################################
-@app.route('/pets/<int:id>', methods=['GET'])
-def get_pets(id):
+@app.route('/pets/<int:pet_id>', methods=['GET'])
+def get_pets(pet_id):
     """ Retrieves a Pet with a specific id """
-    app.logger.info('Finding a Pet with id [{}]'.format(id))
-    pet = Pet.find(id)
+    app.logger.info('Finding a Pet with id [{}]'.format(pet_id))
+    pet = Pet.find(pet_id)
     if pet:
         message = pet.serialize()
         return_code = HTTP_200_OK
     else:
-        message = {'error' : 'Pet with id: %s was not found' % str(id)}
+        message = {'error' : 'Pet with id: %s was not found' % str(pet_id)}
         return_code = HTTP_404_NOT_FOUND
 
     return jsonify(message), return_code
@@ -133,26 +133,26 @@ def create_pets():
     pet.save()
     message = pet.serialize()
     response = make_response(jsonify(message), HTTP_201_CREATED)
-    response.headers['Location'] = url_for('get_pets', id=pet.id, _external=True)
+    response.headers['Location'] = url_for('get_pets', pet_id=pet.id, _external=True)
     return response
 
 ######################################################################
 # UPDATE AN EXISTING PET
 ######################################################################
-@app.route('/pets/<int:id>', methods=['PUT'])
-def update_pets(id):
+@app.route('/pets/<int:pet_id>', methods=['PUT'])
+def update_pets(pet_id):
     """ Updates a Pet in the database fom the posted database """
-    app.logger.info('Updating a Pet with id [{}]'.format(id))
-    pet = Pet.find(id)
+    app.logger.info('Updating a Pet with id [{}]'.format(pet_id))
+    pet = Pet.find(pet_id)
     if pet:
         payload = request.get_json()
         pet.deserialize(payload)
-        pet.id = id
+        pet.id = pet_id
         pet.save()
         message = pet.serialize()
         return_code = HTTP_200_OK
     else:
-        message = {'error' : 'Pet with id: %s was not found' % str(id)}
+        message = {'error' : 'Pet with id: %s was not found' % str(pet_id)}
         return_code = HTTP_404_NOT_FOUND
 
     return jsonify(message), return_code
@@ -160,11 +160,11 @@ def update_pets(id):
 ######################################################################
 # DELETE A PET
 ######################################################################
-@app.route('/pets/<int:id>', methods=['DELETE'])
-def delete_pets(id):
+@app.route('/pets/<int:pet_id>', methods=['DELETE'])
+def delete_pets(pet_id):
     """ Removes a Pet from the database that matches the id """
-    app.logger.info('Deleting a Pet with id [{}]'.format(id))
-    pet = Pet.find(id)
+    app.logger.info('Deleting a Pet with id [{}]'.format(pet_id))
+    pet = Pet.find(pet_id)
     if pet:
         pet.delete()
     return make_response('', HTTP_204_NO_CONTENT)
