@@ -18,17 +18,17 @@ Download [Vagrant](https://www.vagrantup.com/)
 Clone the project to your development folder and create your Vagrant vm
 
 ```sh
-    $ git clone https://github.com/nyu-devops/lab-restful-flask.git
-    $ cd lab-restful-flask
-    $ vagrant up
+    git clone https://github.com/nyu-devops/lab-restful-flask.git
+    cd lab-restful-flask
+    vagrant up
 ```
 
 Once the VM is up you can use it with:
 
 ```sh
-    $ vagrant ssh
-    $ cd /vagrant
-    $ python run.py
+    vagrant ssh
+    cd /vagrant
+    python run.py
 ```
 
 You should now be able to see the service running in your browser by going to
@@ -51,14 +51,14 @@ For running the service during development and debugging, you can also run the s
 using the `flask` command with:
 
 ```sh
-    $ export FLASK_APP=app/service.py
-    $ flask run -h 0.0.0.0
+    export FLASK_APP=app/service.py
+    flask run -h 0.0.0.0
 ```
 
 or you can specify this all on one line with:
 
 ```
-    $ env FLASK_APP=app/service.py flask run -h 0.0.0.0
+    env FLASK_APP=app/service.py flask run -h 0.0.0.0
 ```
 
 Note that we need to bind the host IP address with `-h 0.0.0.0` so that the forwarded ports work correctly in **Vagrant**. If you were running this locally on your own computer you would not need this extra parameter.
@@ -66,7 +66,7 @@ Note that we need to bind the host IP address with `-h 0.0.0.0` so that the forw
 Finally you can use the `honcho` command to start `gunicorn` to run the servce with:
 
 ```sh
-    $ honcho start
+    honcho start
 ```
 
 **Honcho** uses the `Procfile` to determine how to run the service. This file uses **Gunicorn** which is how you would start the server in production.
@@ -76,7 +76,7 @@ Finally you can use the `honcho` command to start `gunicorn` to run the servce w
 Run the tests suite with:
 
 ```sh
-    $ nosetests
+    nosetests
 ```
 
 You should see all of the tests passing with a code coverage report at the end. this is controlled by the `setup.cfg` file in the repo.
@@ -86,14 +86,14 @@ You should see all of the tests passing with a code coverage report at the end. 
 When you are done, you can use the `exit` command to get out of the virtual machine just as if it were a remote server and shut down the vm with the following:
 
 ```sh
-    $ exit
-    $ vagrant halt
+    exit
+    vagrant halt
 ```
 
 If the VM is no longer needed you can remove it with from your computer to free up disk space with:
 
 ```sh
-    $ vagrant destroy
+    vagrant destroy
 ```
 
 This repo is part of the NYU masters class: **CSCI-GA.2820-001 DevOps and Agile Methodologies** created by John Rofrano.
