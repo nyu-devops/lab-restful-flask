@@ -37,9 +37,9 @@ class Pet(object):
     data = []
     index = 0
 
-    def __init__(self, id=0, name='', category=''):
+    def __init__(self, pet_id=0, name='', category=''):
         """ Initialize a Pet """
-        self.id = id
+        self.id = pet_id
         self.name = name
         self.category = category
 
