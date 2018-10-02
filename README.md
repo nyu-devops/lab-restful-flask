@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/nyu-devops/lab-restful-flask.svg?branch=master)](https://travis-ci.org/nyu-devops/lab-restful-flask)
 [![Codecov](https://codecov.io/gh/nyu-devops/lab-restful-flask/branch/master/graph/badge.svg)](https://codecov.io/gh/nyu-devops/lab-restful-flask)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c137dfceeb2b4c62830ee0810e6344ae)](https://app.codacy.com/app/rofrano/lab-restful-flask?utm_source=github.com&utm_medium=referral&utm_content=nyu-devops/lab-restful-flask&utm_campaign=Badge_Grade_Dashboard)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This repo demonstrates how to create a simple RESTful service using Python Flask.
