@@ -24,7 +24,7 @@ import logging
 import unittest
 import json
 from flask_api import status    # HTTP Status Codes
-import app.service as service
+import app.routes as service
 
 ######################################################################
 #  T E S T   C A S E S

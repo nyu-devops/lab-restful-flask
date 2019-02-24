@@ -52,14 +52,7 @@ For running the service during development and debugging, you can also run the s
 using the `flask` command with:
 
 ```sh
-    export FLASK_APP=app/service.py
     flask run -h 0.0.0.0
-```
-
-or you can specify this all on one line with:
-
-```
-    env FLASK_APP=app/service.py flask run -h 0.0.0.0
 ```
 
 Note that we need to bind the host IP address with `-h 0.0.0.0` so that the forwarded ports work correctly in **Vagrant**. If you were running this locally on your own computer you would not need this extra parameter.
